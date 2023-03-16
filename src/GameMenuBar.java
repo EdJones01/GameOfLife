@@ -1,18 +1,24 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.KeyManagementException;
+import java.util.Arrays;
+import java.io.File;
 import javax.swing.event.*;
 
 public class GameMenuBar extends JMenuBar {
+    ActionListener actionListener;
+
     public GameMenuBar(ActionListener actionListener) {
+        this.actionListener = actionListener;
         JMenu fileMenu = new JMenu("File");
 
-        fileMenu.add(createMenuItem("New", actionListener));
-        fileMenu.add(createMenuItem("Open", actionListener));
-        fileMenu.add(createMenuItem("Save", actionListener));
+        fileMenu.add(createMenuItem("New"));
+        fileMenu.add(createMenuItem("Open"));
+        fileMenu.add(createMenuItem("Save"));
 
         JMenu simulationMenu = new JMenu("Simulation");
-        simulationMenu.add(createMenuItem("Toggle Simulation", "toggle", actionListener));
+        simulationMenu.add(createMenuItem("Toggle Simulation", "toggle"));
         JMenuItem fpsLabel = createMenuItem("FPS = 10", null);
         simulationMenu.add(fpsLabel);
 
@@ -26,18 +32,34 @@ public class GameMenuBar extends JMenuBar {
         simulationMenu.add(speedSlider);
 
         JMenu settingsMenu = new JMenu("Settings");
-        settingsMenu.add(createMenuItem("Change cell color", "color", actionListener));
+        settingsMenu.add(createMenuItem("Change cell color", "color"));
 
         add(fileMenu);
         add(simulationMenu);
+        add(createPresetMenu());
         add(settingsMenu);
     }
 
-    private JMenuItem createMenuItem(String name, ActionListener actionListener) {
-        return createMenuItem(name, name.toLowerCase(), actionListener);
+    private JMenu createPresetMenu() {
+        JMenu presetMenu = new JMenu("Presets");
+
+        presetMenu.add(createPresetMenuItem("Glider"));
+        presetMenu.add(createPresetMenuItem("Gun"));
+        presetMenu.add(createPresetMenuItem("Spaceship"));
+
+        return presetMenu;
     }
 
-    private JMenuItem createMenuItem(String name, String cmd, ActionListener actionListener) {
+    private JMenuItem createPresetMenuItem(String preset) {
+        String name = preset.substring(0, 1).toUpperCase() + preset.substring(1);
+        return createMenuItem(name, "preset_" + preset.toLowerCase() + ".gol");
+    }
+
+    private JMenuItem createMenuItem(String name) {
+        return createMenuItem(name, name.toLowerCase());
+    }
+
+    private JMenuItem createMenuItem(String name, String cmd) {
         JMenuItem menuItem = new JMenuItem(name);
         menuItem.addActionListener(actionListener);
         menuItem.setActionCommand(cmd);

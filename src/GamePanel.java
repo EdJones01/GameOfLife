@@ -1,11 +1,11 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -30,7 +30,7 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 
         generateCells();
 
-        setupTimer(10);
+        setupTimer();
 
         Tools.addKeyBinding(this, KeyEvent.VK_RIGHT, "update", (evt) -> update());
         Tools.addKeyBinding(this, KeyEvent.VK_SPACE, "timer", (evt) -> toggleUpdateTimer());
@@ -110,8 +110,8 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         return cells[x][y];
     }
 
-    private void setupTimer(int fps) {
-        updateTimer = new Timer(1000 / fps, this);
+    private void setupTimer() {
+        updateTimer = new Timer(1000 / 10, this);
         updateTimer.setActionCommand("update");
     }
 
@@ -144,16 +144,41 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-    private void open() {
+    private void openFromFile(String path) {
         String[] data;
         try {
-            data = Tools.readFromFile(getFilePath());
+            data = Tools.readFromFile(path);
         } catch (Exception e) {
             Tools.showPopup("Failed to load file.");
             return;
         }
-        String[] dimentions = data[data.length - 1].split(",");
-        cells = new Cell[Integer.parseInt(dimentions[0])][Integer.parseInt(dimentions[1])];
+        open(data);
+    }
+
+    private void openPreset(String preset) {
+        LinkedList<String> lines = new LinkedList<>();
+        try (InputStream inputStream = Main.class.getResourceAsStream("/resources/presets/" + preset)) {
+            if (inputStream != null) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        lines.add(line);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Tools.showPopup("Unable to load preset.");
+        }
+
+        String[] data = new String[lines.size()];
+        for (int i = 0; i < data.length; i++)
+            data[i] = lines.get(i);
+        open(data);
+    }
+
+    private void open(String[] data) {
+        String[] dimensions = data[data.length - 1].split(",");
+        cells = new Cell[Integer.parseInt(dimensions[0])][Integer.parseInt(dimensions[1])];
         generateCells();
 
         boolean[][] outputArray = new boolean[data.length - 1][];
@@ -200,7 +225,6 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
             return;
 
         Cell[][] newCells = new Cell[cells.length + amount][cells[0].length + amount];
-        System.out.println(cells.length + " " + newCells.length);
 
         for (int i = 0; i < newCells.length; i++) {
             for (int j = 0; j < newCells[0].length; j++) {
@@ -231,13 +255,15 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         if (cmd.equals("save"))
             save();
         if (cmd.equals("open"))
-            open();
+            openFromFile(getFilePath());
         if (cmd.equals("toggle"))
             toggleUpdateTimer();
         if (cmd.contains("fps_"))
             updateTimer.setDelay(1000 / Integer.parseInt(cmd.replaceAll("fps_", "")));
         if (cmd.equals("color"))
             cellColor = Tools.chooseColorDialog("Choose cell color", cellColor);
+        if (cmd.contains("preset"))
+            openPreset(cmd.split("_")[1]);
         repaint();
     }
 
