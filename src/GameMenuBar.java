@@ -8,6 +8,8 @@ public class GameMenuBar extends JMenuBar {
         JMenu fileMenu = new JMenu("File");
 
         fileMenu.add(createMenuItem("New", actionListener));
+        fileMenu.add(createMenuItem("Open", actionListener));
+        fileMenu.add(createMenuItem("Save", actionListener));
 
         JMenu simulationMenu = new JMenu("Simulation");
         simulationMenu.add(createMenuItem("Toggle Simulation", "toggle", actionListener));
